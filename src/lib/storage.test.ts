@@ -1,0 +1,3 @@
+import {beforeEach,describe,expect,it} from 'vitest';
+import {loadState,saveState,defaultState,importState} from './storage';
+describe('local persistence',()=>{beforeEach(()=>localStorage.clear());it('round trips state',()=>{const s=defaultState();s.records['2026-08-12']={localDate:'2026-08-12',showers:['x'],workoutAt:null,changedClothesAt:null,environmentResetAt:null,lockInAt:null,editedAt:null};saveState(s);expect(loadState().records['2026-08-12'].showers).toEqual(['x'])});it('rejects malformed imports',()=>expect(()=>importState('{"bad":true}')).toThrow())});

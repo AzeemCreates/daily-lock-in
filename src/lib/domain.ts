@@ -1,0 +1,14 @@
+export type HabitAction='workout'|'shower'|'clothes'|'environment'|'lock_in';
+export type DayStatus='complete'|'missed'|'partial'|'progress'|'future'|'rest';
+export interface DailyRecord{localDate:string;showers:string[];workoutAt:string|null;changedClothesAt:string|null;environmentResetAt:string|null;lockInAt:string|null;editedAt:string|null}
+export interface AppSettings{schemaVersion:1;weekStartsOn:0|1;workoutRestDay:number;accentColor:string;rewardColor:string;dangerColor:string;microphoneEnabled:boolean;reducedMotion:boolean;storeVoiceTranscripts:boolean;labels:{workout:string;showers:string;lockIn:string}}
+export const defaultSettings:AppSettings={schemaVersion:1,weekStartsOn:1,workoutRestDay:0,accentColor:'#8b5cf6',rewardColor:'#35e39a',dangerColor:'#ff5d72',microphoneEnabled:true,reducedMotion:false,storeVoiceTranscripts:false,labels:{workout:'Workout',showers:'Two Showers',lockIn:'Lock In'}};
+export const emptyRecord=(localDate:string):DailyRecord=>({localDate,showers:[],workoutAt:null,changedClothesAt:null,environmentResetAt:null,lockInAt:null,editedAt:null});
+export const localDate=(date=new Date())=>`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+export const parseLocalDate=(value:string)=>{const [y,m,d]=value.split('-').map(Number);return new Date(y,m-1,d)};
+export const isWorkoutRequired=(date:string,restDay:number)=>parseLocalDate(date).getDay()!==restDay;
+export const canLockIn=(r:DailyRecord)=>r.showers.length>0&&!!r.changedClothesAt&&!!r.environmentResetAt;
+export function completeAction(r:DailyRecord,action:HabitAction,at=new Date().toISOString()):DailyRecord{const n={...r,showers:[...r.showers]};if(action==='workout')n.workoutAt=at;if(action==='shower'&&n.showers.length<2)n.showers.push(at);if(action==='clothes')n.changedClothesAt=at;if(action==='environment')n.environmentResetAt=at;if(action==='lock_in'){if(!canLockIn(n))throw new Error('Lock In prerequisites are incomplete');n.lockInAt=at}return n}
+export function getDayStatus(r:DailyRecord|undefined,today:string,s:AppSettings):DayStatus{if(!r)r=emptyRecord('');if(r.localDate>today)return'future';const workoutOk=!isWorkoutRequired(r.localDate,s.workoutRestDay)||!!r.workoutAt;const showersOk=r.showers.length>=2;const lockOk=!!r.lockInAt;const done=workoutOk&&showersOk&&lockOk;if(done)return'complete';if(r.localDate===today)return'progress';const any=!!r.workoutAt||r.showers.length>0||!!r.changedClothesAt||!!r.environmentResetAt||!!r.lockInAt;return any?'partial':'missed'}
+export const overallProgress=(r:DailyRecord,s:AppSettings)=>{let complete=(r.showers.length>=2?1:r.showers.length/2)+(r.lockInAt?1:0);complete+=isWorkoutRequired(r.localDate,s.workoutRestDay)?(r.workoutAt?1:0):1;return Math.round(complete/3*100)};
+export const dateRange=(start:Date,count:number)=>Array.from({length:count},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return localDate(d)});
