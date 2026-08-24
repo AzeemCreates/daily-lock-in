@@ -16,11 +16,19 @@ async function readCompletions(date:string){
   return out;
 }
 
+type Body={date?:string;task?:string;action?:string;token?:string};
+
 export default async function handler(req:VercelRequest,res:VercelResponse){
-  const token=req.method==='GET'?(req.query.token as string|undefined):(req.body?.token as string|undefined);
+  const method=(req.method||'GET').toUpperCase();
+  let body:Body={};
+  if(method==='POST'){
+    try{body=(req.body as Body)||{}}
+    catch{res.status(400).json({error:'Invalid request body'});return}
+  }
+  const token=method==='GET'?(req.query.token as string|undefined):body.token;
   if(!process.env.WIDGET_TOKEN||token!==process.env.WIDGET_TOKEN){res.status(401).json({error:'Unauthorized'});return}
 
-  if(req.method==='GET'){
+  if(method==='GET'){
     const date=req.query.date as string|undefined;
     if(!date||!DATE_RE.test(date)){res.status(400).json({error:'date must be YYYY-MM-DD'});return}
     await ensureTable();
@@ -28,8 +36,8 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
     return;
   }
 
-  if(req.method==='POST'){
-    const{date,task,action}=(req.body||{})as{date?:string;task?:string;action?:string};
+  if(method==='POST'){
+    const{date,task,action}=body;
     if(!date||!DATE_RE.test(date)){res.status(400).json({error:'date must be YYYY-MM-DD'});return}
     if(!task||!TASK_KEYS.has(task)){res.status(400).json({error:'unknown task'});return}
     await ensureTable();
