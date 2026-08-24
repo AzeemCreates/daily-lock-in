@@ -30,7 +30,11 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
     }
   }
   const token=method==='GET'?(req.query.token as string|undefined):body.token;
-  if(!process.env.WIDGET_TOKEN||token!==process.env.WIDGET_TOKEN){res.status(401).json({error:'Unauthorized'});return}
+  if(!process.env.WIDGET_TOKEN||token!==process.env.WIDGET_TOKEN){
+    console.error('Unauthorized. received len:',token?.length??0,'received:',JSON.stringify(token),'expected len:',process.env.WIDGET_TOKEN?.length??0);
+    res.status(401).json({error:'Unauthorized'});
+    return;
+  }
 
   if(method==='GET'){
     const date=req.query.date as string|undefined;
