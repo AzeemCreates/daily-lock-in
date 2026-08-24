@@ -1,4 +1,6 @@
 export type HabitAction='workout'|'shower'|'clothes'|'environment'|'lock_in';
+export type QuickTaskKey='far_1000x'|'pushups_125'|'deep_work_90'|'study'|'read_25_pages'|'algorithm'|'skill_stack'|'habit_stack'|'shower_task';
+export const quickTasks:{key:QuickTaskKey;label:string}[]=[{key:'far_1000x',label:'1000x (Far)'},{key:'pushups_125',label:'125 Push-Ups'},{key:'deep_work_90',label:'90 Min Deep Work'},{key:'study',label:'Study'},{key:'read_25_pages',label:'Read 25 Pages'},{key:'algorithm',label:'Algorithm'},{key:'skill_stack',label:'Skill-Stack'},{key:'habit_stack',label:'Habit-Stack'},{key:'shower_task',label:'Shower'}];
 export type DayStatus='complete'|'missed'|'partial'|'progress'|'future'|'rest';
 export interface DailyRecord{localDate:string;showers:string[];workoutAt:string|null;changedClothesAt:string|null;environmentResetAt:string|null;lockInAt:string|null;editedAt:string|null}
 export interface AppSettings{schemaVersion:1;weekStartsOn:0|1;workoutRestDay:number;accentColor:string;rewardColor:string;dangerColor:string;microphoneEnabled:boolean;reducedMotion:boolean;storeVoiceTranscripts:boolean;labels:{workout:string;showers:string;lockIn:string}}
