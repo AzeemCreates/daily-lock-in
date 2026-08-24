@@ -23,7 +23,11 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
   let body:Body={};
   if(method==='POST'){
     try{body=(req.body as Body)||{}}
-    catch{res.status(400).json({error:'Invalid request body'});return}
+    catch(err){
+      console.error('Body parse failed. content-type:',req.headers['content-type'],'error:',err);
+      res.status(400).json({error:'Invalid request body',contentType:req.headers['content-type']||null});
+      return;
+    }
   }
   const token=method==='GET'?(req.query.token as string|undefined):body.token;
   if(!process.env.WIDGET_TOKEN||token!==process.env.WIDGET_TOKEN){res.status(401).json({error:'Unauthorized'});return}
