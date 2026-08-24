@@ -5,8 +5,10 @@ const sql=neon(process.env.DATABASE_URL!);
 const TASK_KEYS=new Set(['far_1000x','pushups_125','deep_work_90','study','read_25_pages','algorithm','skill_stack','habit_stack','shower_task']);
 const DATE_RE=/^\d{4}-\d{2}-\d{2}$/;
 
-async function ensureTable(){
-  await sql`CREATE TABLE IF NOT EXISTS quick_task_completions(task_date date NOT NULL,task_key text NOT NULL,completed_at timestamptz NOT NULL,PRIMARY KEY(task_date,task_key))`;
+let tableReady:Promise<unknown>|null=null;
+function ensureTable(){
+  if(!tableReady)tableReady=sql`CREATE TABLE IF NOT EXISTS quick_task_completions(task_date date NOT NULL,task_key text NOT NULL,completed_at timestamptz NOT NULL,PRIMARY KEY(task_date,task_key))`.catch(err=>{tableReady=null;throw err});
+  return tableReady;
 }
 
 async function readCompletions(date:string){
@@ -31,7 +33,7 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
   }
   const token=method==='GET'?(req.query.token as string|undefined):body.token;
   if(!process.env.WIDGET_TOKEN||token!==process.env.WIDGET_TOKEN){
-    console.error('Unauthorized. received len:',token?.length??0,'received:',JSON.stringify(token),'expected len:',process.env.WIDGET_TOKEN?.length??0);
+    console.error('Unauthorized. received len:',token?.length??0,'expected len:',process.env.WIDGET_TOKEN?.length??0);
     res.status(401).json({error:'Unauthorized'});
     return;
   }
